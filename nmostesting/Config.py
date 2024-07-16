@@ -104,6 +104,9 @@ KEYS_MOCKS = [
     "test_data/BCP00301/ca/intermediate/private/rsa.mocks.testsuite.nmos.tv.key.pem"
 ]
 
+# Combined certificate and key. Client side.
+CERT_CLIENT = "example/path/to/client/cert.pem"
+
 # Test using authorization as per AMWA IS-10 and BCP-003-02
 ENABLE_AUTH = False
 
