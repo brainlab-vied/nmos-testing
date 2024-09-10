@@ -40,7 +40,7 @@ ASSET_KEY = "asset"
 PRINT_KEY = "label"
 
 def get_resource_representation(resource: dict):
-    key = PRINT_KEY if resource.get(PRINT_KEY) else "id"
+    key = PRINT_KEY if PRINT_KEY in resource else "id"
     return resource[key]
 
 
