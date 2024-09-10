@@ -37,6 +37,12 @@ RECEIVER_CAPS_KEY = "receiver-caps"
 CAPS_REGISTER_KEY = "caps-register"
 GROUPHINT_KEY = "grouphint"
 ASSET_KEY = "asset"
+PRINT_KEY = "label"
+
+def get_resource_representation(resource: dict):
+    key = PRINT_KEY if PRINT_KEY in resource else "id"
+    return f"{resource[key]} ({resource['id']})"
+
 
 
 class IS0401Test(GenericTest):
@@ -477,7 +483,7 @@ class IS0401Test(GenericTest):
                     return test.FAIL("{} {} was not found in the registry.".format(res_type.title(), res_id))
                 elif reg_resource != node_resources[res_id]:
                     return test.FAIL("Node API JSON does not match data in registry for "
-                                     "{} {}.".format(res_type.title(), res_id))
+                                     "{} {}.".format(res_type.title(), get_resource_representation(reg_resource)))
 
             return test.PASS()
         except ValueError:
@@ -861,7 +867,7 @@ class IS0401Test(GenericTest):
                 if media_type not in supported_media_types:
                     if not warn_sdp_untested:
                         warn_sdp_untested = "Could not test Receiver {} because this test cannot generate SDP data " \
-                            "for media_type '{}'".format(receiver["id"], media_type)
+                            "for media_type '{}'".format(get_resource_representation(receiver), media_type)
                     continue
 
                 if CONFIG.DNS_SD_MODE == "multicast":
@@ -884,12 +890,12 @@ class IS0401Test(GenericTest):
                 receiver = response.json()
                 if receiver["subscription"]["sender_id"] != request_data["id"]:
                     return test.FAIL("Node API Receiver {} subscription does not reflect the subscribed "
-                                     "Sender ID".format(receiver["id"]))
+                                     "Sender ID".format(get_resource_representation(receiver)))
 
                 if self.is04_utils.compare_api_version(api["version"], "v1.2") >= 0:
                     if not receiver["subscription"]["active"]:
                         return test.FAIL("Node API Receiver {} subscription does not indicate an active "
-                                         "subscription".format(receiver["id"]))
+                                         "subscription".format(get_resource_representation(receiver)))
 
                 formats_tested[receiver["format"]] += 1
 
@@ -932,13 +938,13 @@ class IS0401Test(GenericTest):
                 receiver = response.json()
                 if receiver["subscription"]["sender_id"] is not None:
                     return test.FAIL("Node API Receiver {} subscription does not reflect the subscribed "
-                                     "Sender ID".format(receiver["id"]))
+                                     "Sender ID".format(get_resource_representation(receiver)))
 
                 api = self.apis[NODE_API_KEY]
                 if self.is04_utils.compare_api_version(api["version"], "v1.2") >= 0:
                     if receiver["subscription"]["active"]:
                         return test.FAIL("Node API Receiver {} subscription does not indicate an inactive "
-                                         "subscription".format(receiver["id"]))
+                                         "subscription".format(get_resource_representation(receiver)))
 
                 return test.PASS()
         except json.JSONDecodeError:
@@ -1154,7 +1160,7 @@ class IS0401Test(GenericTest):
             for source in response.json():
                 clock_name = source["clock_name"]
                 if clock_name not in clocks and clock_name is not None:
-                    return test.FAIL("Source '{}' uses a non-existent clock name '{}'".format(source["id"], clock_name))
+                    return test.FAIL("Source '{}' uses a non-existent clock name '{}'".format(get_resource_representation(source), clock_name))
         except json.JSONDecodeError:
             return test.FAIL("Non-JSON response returned from Node API")
         except KeyError as e:
@@ -1195,12 +1201,12 @@ class IS0401Test(GenericTest):
                     interface_bindings = binder["interface_bindings"]
                     if len(interface_bindings) == 0:
                         return test.FAIL("{} '{}' does not list any interface_bindings"
-                                         .format(binder_type.capitalize().rstrip("s"), binder["id"]))
+                                         .format(binder_type.capitalize().rstrip("s"), get_resource_representation(binder)))
                     for interface_name in interface_bindings:
                         if interface_name not in interfaces:
                             return test.FAIL("{} '{}' uses a non-existent interface name '{}'"
                                              .format(binder_type.capitalize().rstrip("s"),
-                                                     binder["id"],
+                                                     get_resource_representation(binder),
                                                      interface_name))
             except json.JSONDecodeError:
                 return test.FAIL("Non-JSON response returned from Node API")
@@ -1534,7 +1540,7 @@ class IS0401Test(GenericTest):
                                 continue
                             if not isinstance(tag_value, list) or len(tag_value) == 0:
                                 return test.FAIL("Group tag for {} {} is not an array or has too few items"
-                                                 .format(resource_name.capitalize().rstrip("s"), resource["id"]))
+                                                 .format(resource_name.capitalize().rstrip("s"), get_resource_representation(resource)))
                             found_groups = True
                             for group_def in tag_value:
                                 group_params = group_def.split(":")
@@ -1543,14 +1549,14 @@ class IS0401Test(GenericTest):
                                 # Perform basic validation on the group syntax
                                 if len(group_params) < 2:
                                     return test.FAIL("Group syntax for {} {} has too few parameters"
-                                                     .format(resource_name.capitalize().rstrip("s"), resource["id"]))
+                                                     .format(resource_name.capitalize().rstrip("s"), get_resource_representation(resource)))
                                 elif len(group_params) > 3:
                                     return test.FAIL("Group syntax for {} {} has too many parameters"
-                                                     .format(resource_name.capitalize().rstrip("s"), resource["id"]))
+                                                     .format(resource_name.capitalize().rstrip("s"), get_resource_representation(resource)))
                                 elif len(group_params) == 3:
                                     if group_params[2] not in ["device", "node"]:
                                         return test.FAIL("Group syntax for {} {} uses an invalid group scope: {}"
-                                                         .format(resource_name.capitalize().rstrip("s"), resource["id"],
+                                                         .format(resource_name.capitalize().rstrip("s"), get_resource_representation(resource),
                                                                  group_params[2]))
                                     group_scope = group_params[2]
 
@@ -1567,7 +1573,7 @@ class IS0401Test(GenericTest):
                                 # Check for duplicate roles within groups
                                 if group_params[1] in group_ref:
                                     return test.FAIL("Duplicate role found in group {} for resources {} and {}"
-                                                     .format(group_params[0], resource["id"],
+                                                     .format(group_params[0], get_resource_representation(resource),
                                                              group_ref[group_params[1]]))
                                 else:
                                     group_ref[group_params[1]] = resource["id"]
@@ -1599,11 +1605,11 @@ class IS0401Test(GenericTest):
                                               "urn:x-nmos:format:mux"]:
                         if "grain_rate" not in resource:
                             return test.WARNING("Source {} MUST specify a 'grain_rate' if it is periodic"
-                                                .format(resource["id"]))
+                                                .format(get_resource_representation(resource)))
                         source_rate = resource["grain_rate"]
                         if source_rate.get("numerator", 0) == 0 or source_rate.get("denominator", 1) == 0:
                             return test.FAIL("Source {} 'grain_rate' is invalid: {}"
-                                             .format(resource["id"], source_rate))
+                                             .format(get_resource_representation(resource), source_rate))
                 if len(response.json()) > 0:
                     return test.PASS()
             except json.JSONDecodeError:
@@ -1628,22 +1634,22 @@ class IS0401Test(GenericTest):
                         source = sources[flow["source_id"]]
                         if "grain_rate" not in source:
                             return test.FAIL("Source {} MUST specify a 'grain_rate' because one or more of its "
-                                             "child Flows specify a 'grain_rate'".format(source["id"]))
+                                             "child Flows specify a 'grain_rate'".format(get_resource_representation(source)))
                         flow_rate = flow["grain_rate"]
                         if flow_rate.get("numerator", 0) == 0 or flow_rate.get("denominator", 1) == 0:
-                            return test.FAIL("Flow {} 'grain_rate' is invalid: {}".format(flow["id"], flow_rate))
+                            return test.FAIL("Flow {} 'grain_rate' is invalid: {}".format(get_resource_representation(flow), flow_rate))
                         source_rate = source["grain_rate"]
                         if source_rate.get("numerator", 0) == 0 or source_rate.get("denominator", 1) == 0:
                             return test.FAIL("Source {} 'grain_rate' is invalid: {}"
-                                             .format(source["id"], source_rate))
+                                             .format(get_resource_representation(source), source_rate))
                         if ((source_rate["numerator"] * flow_rate.get("denominator", 1)) %
                            (flow_rate["numerator"] * source_rate.get("denominator", 1))):
                             return test.FAIL("Flow {} 'grain_rate' MUST be integer divisible by the Source "
-                                             "'grain_rate'".format(flow["id"]))
+                                             "'grain_rate'".format(get_resource_representation(flow)))
                     elif flow["format"] in ["urn:x-nmos:format:video",
                                             "urn:x-nmos:format:mux"]:
                         return test.WARNING("Flow {} SHOULD specify a 'grain_rate' if it is periodic"
-                                            .format(flow["id"]))
+                                            .format(get_resource_representation(flow)))
                 if len(flow_response.json()) > 0:
                     return test.PASS()
             except json.JSONDecodeError:
@@ -1710,7 +1716,7 @@ class IS0401Test(GenericTest):
                     source = sources[flow["source_id"]]
                     if flow["format"] != source["format"]:
                         return test.FAIL("Source {} and Flow {} 'format' does not match"
-                                         .format(source["id"], flow["id"]))
+                                         .format(get_resource_representation(source), get_resource_representation(flow)))
                 if len(flow_response.json()) > 0:
                     return test.PASS()
             except json.JSONDecodeError:
@@ -1748,7 +1754,7 @@ class IS0401Test(GenericTest):
                             self.validate_schema(receiver, schema)
                         except ValidationError as e:
                             return test.FAIL("Receiver {} does not comply with the BCP-004-01 schema: "
-                                             "{}".format(receiver["id"], str(e)),
+                                             "{}".format(get_resource_representation(receiver), str(e)),
                                              "https://specs.amwa.tv/bcp-004-01/branches/{}"
                                              "/docs/Receiver_Capabilities.html"
                                              "#validating-parameter-constraints-and-constraint-sets"
@@ -1758,7 +1764,7 @@ class IS0401Test(GenericTest):
                                 self.validate_schema(constraint_set, reg_schema)
                             except ValidationError as e:
                                 return test.FAIL("Receiver {} does not comply with the Capabilities register schema: "
-                                                 "{}".format(receiver["id"], str(e)),
+                                                 "{}".format(get_resource_representation(receiver), str(e)),
                                                  "https://specs.amwa.tv/bcp-004-01/branches/{}"
                                                  "/docs/Receiver_Capabilities.html"
                                                  "#behaviour-receivers"
@@ -1770,7 +1776,7 @@ class IS0401Test(GenericTest):
                                     break
                             if not found_param_constraint:
                                 return test.FAIL("Receiver {} caps includes a constraint set without any "
-                                                 "parameter constraints".format(receiver["id"]),
+                                                 "parameter constraints".format(get_resource_representation(receiver)),
                                                  "https://specs.amwa.tv/bcp-004-01/branches/{}"
                                                  "/docs/Receiver_Capabilities.html"
                                                  "#constraint-sets"
@@ -1809,7 +1815,7 @@ class IS0401Test(GenericTest):
                         core_version = receiver["version"]
                         if self.is04_utils.compare_resource_version(caps_version, core_version) > 0:
                             return test.FAIL("Receiver {} caps version is later than resource version"
-                                             .format(receiver["id"]),
+                                             .format(get_resource_representation(receiver)),
                                              "https://specs.amwa.tv/bcp-004-01/branches/{}"
                                              "/docs/Receiver_Capabilities.html#behaviour-receivers"
                                              .format(api["spec_branch"]))
@@ -1856,7 +1862,7 @@ class IS0401Test(GenericTest):
                             for param_constraint in constraint_set:
                                 if param_constraint not in reg_schema_obj["properties"] and not warn_unregistered:
                                     warn_unregistered = "Receiver {} caps includes an unregistered " \
-                                        "parameter constraint '{}'".format(receiver["id"], param_constraint)
+                                        "parameter constraint '{}'".format(get_resource_representation(receiver), param_constraint)
             except json.JSONDecodeError:
                 return test.FAIL("Non-JSON response returned from Node API")
             except KeyError as e:
@@ -1994,7 +2000,7 @@ class IS0401Test(GenericTest):
                             for param_constraint in constraint_set:
                                 if param_constraint in wrong_constraints and not warn_format:
                                     warn_format = "Receiver {} caps includes a parameter constraint '{}' " \
-                                        "that is not relevant for {}".format(receiver["id"], param_constraint, format)
+                                        "that is not relevant for {}".format(get_resource_representation(receiver), param_constraint, format)
             except json.JSONDecodeError:
                 return test.FAIL("Non-JSON response returned from Node API")
             except KeyError as e:
@@ -2037,7 +2043,7 @@ class IS0401Test(GenericTest):
                                     if not set(constraint_set[media_type]["enum"]).issubset(set(media_types)):
                                         return test.FAIL("Receiver {} caps includes a value for the parameter "
                                                          "constraint '{}' that is excluded by 'media_types'"
-                                                         .format(receiver["id"], media_type))
+                                                         .format(get_resource_representation(receiver), media_type))
             except json.JSONDecodeError:
                 return test.FAIL("Non-JSON response returned from Node API")
             except KeyError as e:
