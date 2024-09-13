@@ -3,11 +3,17 @@
 param(
     [switch]$e,  # Default is $false
     [switch]$u,  # Default is $false
-    [string]$c = "../../../BuzzVirtual-Gen2-documentation/certificates/"  # Default certificate path
+    [string]$c
 )
 
 # Exit on error
 $ErrorActionPreference = "Stop"
+
+$mainRepoRoot = git rev-parse --show-toplevel
+
+if (-not $c) {
+    $c = "$mainRepoRoot/../BuzzVirtual-Gen2-documentation/certificates/"
+}
 
 # Usage / Help
 if ($args -contains '-help' -or $args -contains '--help') {
@@ -52,14 +58,14 @@ CONFIG.DNS_SD_MODE = "$dns_mode"
 "@
 
 Write-Output "Creating UserConfig.py"
-Set-Content -Path ./nmostesting/UserConfig.py -Value $configContent
+Set-Content -Path $mainRepoRoot/amwa/nmos-testing/nmostesting/UserConfig.py -Value $configContent
 
 # Run the scripts
 Write-Output "Starting nmos-testing"
-$testProcess = Start-Process py -ArgumentList "nmos-test.py" -NoNewWindow -PassThru
+$testProcess = Start-Process py -ArgumentList "$mainRepoRoot/amwa/nmos-testing/nmos-test.py" -NoNewWindow -PassThru
 
 Write-Output "Starting facade"
-$facadeProcess = Start-Process py -ArgumentList "nmos-testing-facade.py" -NoNewWindow -PassThru
+$facadeProcess = Start-Process py -ArgumentList "$mainRepoRoot/amwa/nmos-testing/nmos-testing-facade.py" -NoNewWindow -PassThru
 
 # Wait for processes to finish
 $testProcess.WaitForExit()

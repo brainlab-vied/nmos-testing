@@ -978,6 +978,7 @@ def check_internal_requirements():
     # This manual requirement check doesn't seem to work for Windows. Just return early on Windows.
     # No need to bother to understand what's going on...
     if platform.system() == "Windows":
+        print("Skipping internal requirements skip on windows")
         return
     
     corrections = {"gitpython": "git",
