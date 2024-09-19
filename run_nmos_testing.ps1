@@ -2,7 +2,6 @@
 
 param(
     [switch]$e,  # Default is $false
-    [switch]$u,  # Default is $false
     [string]$c
 )
 
@@ -21,14 +20,8 @@ if ($args -contains '-help' -or $args -contains '--help') {
     Write-Host ""
     Write-Host "Options:"
     Write-Host "  -e              Enable HTTPS (default: false)"
-    Write-Host "  -u  Enable unicast DNS-SD discovery (default: false)"
     Write-Host "  -c <string>     Path to certificate (default: '../../../BuzzVirtual-Gen2-documentation/certificates/')"
     exit
-}
-
-$dns_mode = "multicast"
-if($u) {
-    $dns_mode = "unicast"
 }
 
 # Create UserConfig.py
@@ -54,7 +47,6 @@ from . import Config as CONFIG
 CONFIG.CERT_CLIENT = ("$c/mgmt-client-combined.pem.crt", "$c/mgmt-client.pem.key")
 CONFIG.CERT_TRUST_ROOT_CA = False
 CONFIG.ENABLE_HTTPS = $e
-CONFIG.DNS_SD_MODE = "$dns_mode"
 "@
 
 Write-Output "Creating UserConfig.py"
