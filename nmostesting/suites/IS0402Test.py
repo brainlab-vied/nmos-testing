@@ -524,11 +524,11 @@ class IS0402Test(GenericTest):
 
             if "paging.until=" + since not in prev or "paging.since=" in prev:
                 raise NMOSTestException(test.FAIL("Query API response did not include the correct 'prev' value "
-                                                  "in the link header, for query: {}".format(query_string)))
+                                                  "in the link header, for query: {}, prev: {} (expected until = {} and not since)".format(query_string, prev, since)))
 
             if "paging.since=" + until not in next or "paging.until=" in next:
                 raise NMOSTestException(test.FAIL("Query API response did not include the correct 'next' value "
-                                                  "in the link header, for query: {}".format(query_string)))
+                                                  "in the link header, for query: {}, next: {} (expected since = {} and not until)".format(query_string, next, until)))
 
             # 'first' and 'last' are optional, though there's no obvious reason for them to be
             first = unquote(link_header["first"],
@@ -539,12 +539,12 @@ class IS0402Test(GenericTest):
             if first is not None:
                 if "paging.since=0:0" not in first or "paging.until=" in first:
                     raise NMOSTestException(test.FAIL("Query API response did not include the correct 'first' value "
-                                                      "in the link header, for query: {}".format(query_string)))
+                                                      "in the link header, for query: {}, first: {} (expected since = 0:0 and not until)".format(query_string, first)))
 
             if last is not None:
                 if "paging.until=" in last or "paging.since=" in last:
                     raise NMOSTestException(test.FAIL("Query API response did not include the correct 'last' value "
-                                                      "in the link header, for query: {}".format(query_string)))
+                                                      "in the link header, for query: {}, last: {} (should not contain until or since)".format(query_string, last)))
 
             for rel in ["first", "prev", "next", "last"]:
                 if rel not in link_header:
