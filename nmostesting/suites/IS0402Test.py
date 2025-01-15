@@ -21,7 +21,7 @@ from requests.compat import json
 from copy import deepcopy
 from time import sleep
 from jsonschema import ValidationError
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 from zeroconf import ServiceBrowser, Zeroconf
 
 from .. import Config as CONFIG
@@ -496,8 +496,11 @@ class IS0402Test(GenericTest):
 
             link_header = self.parse_link_header(response.headers["Link"])
 
-            prev = link_header["prev"]
-            next = link_header["next"]
+            # Change: HTTP link headers may contain encoded Urls like this: "/nodes?paging.since=0%3A0"
+            prev = unquote(link_header["prev"],
+                           encoding='utf-8', errors='replace')
+            next = unquote(link_header["next"],
+                           encoding='utf-8', errors='replace')
 
             if "paging.until=" + since not in prev or "paging.since=" in prev:
                 raise NMOSTestException(test.FAIL("Query API response did not include the correct 'prev' value "
