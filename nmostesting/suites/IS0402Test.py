@@ -21,7 +21,7 @@ from requests.compat import json
 from copy import deepcopy
 from time import sleep
 from jsonschema import ValidationError
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 from zeroconf import ServiceBrowser, Zeroconf
 
 from .. import Config as CONFIG
@@ -39,6 +39,7 @@ class IS0402Test(GenericTest):
     """
     Runs IS-04-02-Test
     """
+
     def __init__(self, apis, auths, **kwargs):
         # Don't auto-test /health/nodes/{nodeId} as it's impossible to automatically gather test data
         omit_paths = ["/health/nodes/{nodeId}"]
@@ -46,7 +47,8 @@ class IS0402Test(GenericTest):
         self.reg_url = self.apis[REG_API_KEY]["url"]
         self.query_url = self.apis[QUERY_API_KEY]["url"]
         if self.apis[REG_API_KEY]["version"] != self.apis[QUERY_API_KEY]["version"]:
-            raise NMOSInitException("The Registration and Query API versions under test must be identical")
+            raise NMOSInitException(
+                "The Registration and Query API versions under test must be identical")
         self.zc = None
         self.zc_listener = None
         self.is04_reg_utils = IS04Utils(self.reg_url)
@@ -152,7 +154,8 @@ class IS0402Test(GenericTest):
         data["description"] = "test_03_1"
 
         # most tests on the Location header are actually done in every call to post_resource
-        location, timestamp = self.post_resource(test, "node", data, codes=[201])
+        location, timestamp = self.post_resource(
+            test, "node", data, codes=[201])
 
         # also check an 'https' URL in the Location header has a hostname not an IP address
         if location is not None and location.startswith("https://") and is_ip_address(urlparse(location).hostname):
@@ -227,7 +230,8 @@ class IS0402Test(GenericTest):
         if self.is04_reg_utils.compare_api_version(api["version"], "v1.1") < 0:
             return test.NA("This test does not apply to v1.0")
 
-        device = self.post_super_resources_and_resource(test, "device", "test_11_1", fail=Test.UNCLEAR)
+        device = self.post_super_resources_and_resource(
+            test, "device", "test_11_1", fail=Test.UNCLEAR)
 
         data = self.copy_resource("sender")
         data["id"] = str(uuid.uuid4())
@@ -261,7 +265,8 @@ class IS0402Test(GenericTest):
         """Registration API responds with 200 HTTP code on updating a registered Node"""
 
         self.do_test_api_v1_x(test)
-        node_data = self.post_super_resources_and_resource(test, "node", "test_15")
+        node_data = self.post_super_resources_and_resource(
+            test, "node", "test_15")
         self.post_resource(test, "node", node_data, codes=[200])
         return test.PASS()
 
@@ -269,7 +274,8 @@ class IS0402Test(GenericTest):
         """Registration API responds with 200 HTTP code on updating a registered Device"""
 
         self.do_test_api_v1_x(test)
-        device_data = self.post_super_resources_and_resource(test, "device", "test_16")
+        device_data = self.post_super_resources_and_resource(
+            test, "device", "test_16")
         self.post_resource(test, "device", device_data, codes=[200])
         return test.PASS()
 
@@ -277,7 +283,8 @@ class IS0402Test(GenericTest):
         """Registration API responds with 200 HTTP code on updating a registered Source"""
 
         self.do_test_api_v1_x(test)
-        source_data = self.post_super_resources_and_resource(test, "source", "test_17")
+        source_data = self.post_super_resources_and_resource(
+            test, "source", "test_17")
         self.post_resource(test, "source", source_data, codes=[200])
         return test.PASS()
 
@@ -285,7 +292,8 @@ class IS0402Test(GenericTest):
         """Registration API responds with 200 HTTP code on updating a registered Flow"""
 
         self.do_test_api_v1_x(test)
-        flow_data = self.post_super_resources_and_resource(test, "flow", "test_18")
+        flow_data = self.post_super_resources_and_resource(
+            test, "flow", "test_18")
         self.post_resource(test, "flow", flow_data, codes=[200])
         return test.PASS()
 
@@ -293,7 +301,8 @@ class IS0402Test(GenericTest):
         """Registration API responds with 200 HTTP code on updating a registered Sender"""
 
         self.do_test_api_v1_x(test)
-        sender_data = self.post_super_resources_and_resource(test, "sender", "test_19")
+        sender_data = self.post_super_resources_and_resource(
+            test, "sender", "test_19")
         self.post_resource(test, "sender", sender_data, codes=[200])
         return test.PASS()
 
@@ -301,7 +310,8 @@ class IS0402Test(GenericTest):
         """Registration API responds with 200 HTTP code on updating a registered Receiver"""
 
         self.do_test_api_v1_x(test)
-        receiver_data = self.post_super_resources_and_resource(test, "receiver", "test_20")
+        receiver_data = self.post_super_resources_and_resource(
+            test, "receiver", "test_20")
         self.post_resource(test, "receiver", receiver_data, codes=[200])
         return test.PASS()
 
@@ -313,9 +323,11 @@ class IS0402Test(GenericTest):
 
         api = self.apis[QUERY_API_KEY]
         if self.is04_query_utils.compare_api_version(api["version"], "v1.1") < 0:
-            raise NMOSTestException(test.NA("This test does not apply to v1.0"))
+            raise NMOSTestException(
+                test.NA("This test does not apply to v1.0"))
         if self.is04_query_utils.compare_api_version(api["version"], "v2.0") >= 0:
-            raise NMOSTestException(test.FAIL("Version > 1 not supported yet."))
+            raise NMOSTestException(
+                test.FAIL("Version > 1 not supported yet."))
 
     def post_sample_nodes(self, test, count, description, labeller=None):
         """Perform a POST request on the Registration API to register a number of sample nodes"""
@@ -351,7 +363,8 @@ class IS0402Test(GenericTest):
             before = self.is04_query_utils.get_TAI_time()
             sleep(PAGING_TIMESTAMP_DELAY)
 
-            location, timestamp = self.post_resource(test, "node", node_data, codes=[201])
+            location, timestamp = self.post_resource(
+                test, "node", node_data, codes=[201])
 
             sleep(PAGING_TIMESTAMP_DELAY)
             after = self.is04_query_utils.get_TAI_time()
@@ -389,9 +402,11 @@ class IS0402Test(GenericTest):
         if id is not None:
             query_parameters.append("id=" + id)
 
-        query_string = "?" + "&".join(query_parameters) if len(query_parameters) != 0 else ""
+        query_string = "?" + \
+            "&".join(query_parameters) if len(query_parameters) != 0 else ""
 
-        valid, response = self.do_request("GET", self.query_url + resource_type + query_string)
+        valid, response = self.do_request(
+            "GET", self.query_url + resource_type + query_string)
 
         return valid, response, query_parameters
 
@@ -415,9 +430,11 @@ class IS0402Test(GenericTest):
 
         valid, response, query_parameters = paged_response
 
-        explicit_paging = len([qp for qp in query_parameters if qp.startswith("paging.")]) > 0
+        explicit_paging = len(
+            [qp for qp in query_parameters if qp.startswith("paging.")]) > 0
 
-        query_string = "?" + "&".join(query_parameters) if len(query_parameters) != 0 else ""
+        query_string = "?" + \
+            "&".join(query_parameters) if len(query_parameters) != 0 else ""
 
         if not valid:
             raise NMOSTestException(test.FAIL("Query API did not respond as expected, "
@@ -436,9 +453,11 @@ class IS0402Test(GenericTest):
 
         # check *presence* of paging headers before checking response body
 
-        PAGING_HEADERS = ["Link", "X-Paging-Limit", "X-Paging-Since", "X-Paging-Until"]
+        PAGING_HEADERS = ["link", "x-paging-limit",
+                          "x-paging-since", "x-paging-until"]
 
-        absent_paging_headers = [_ for _ in PAGING_HEADERS if _ not in response.headers]
+        absent_paging_headers = [
+            _ for _ in PAGING_HEADERS if _ not in response.headers]
         if (len(absent_paging_headers) == len(PAGING_HEADERS)):
             if explicit_paging and self.is04_query_utils.compare_api_version(api["version"], "v1.3") >= 0:
                 raise NMOSTestException(test.FAIL("Query API response did not include any pagination headers. "
@@ -466,7 +485,8 @@ class IS0402Test(GenericTest):
                                                           "for query: {}".format(query_string)))
 
             except json.JSONDecodeError:
-                raise NMOSTestException(test.FAIL("Non-JSON response returned"))
+                raise NMOSTestException(
+                    test.FAIL("Non-JSON response returned"))
             except KeyError:
                 raise NMOSTestException(test.FAIL("Query API did not respond as expected, "
                                                   "for query: {}".format(query_string)))
@@ -474,76 +494,81 @@ class IS0402Test(GenericTest):
         # check *values* of paging headers after body
 
         try:
-            since = response.headers["X-Paging-Since"]
-            until = response.headers["X-Paging-Until"]
-            limit = response.headers["X-Paging-Limit"]
+            since = response.headers["x-paging-since"]
+            until = response.headers["x-paging-until"]
+            limit = response.headers["x-paging-limit"]
 
             if not TS.compare(expected_since, since):
-                raise NMOSTestException(test.FAIL("Query API response header X-Paging-Since '{}' is outside the "
+                raise NMOSTestException(test.FAIL("Query API response header x-paging-since '{}' is outside the "
                                                   "expected range {}, for query: {}. This could just indicate the "
                                                   "API and Testing Tool clocks are not synchronized."
                                                   .format(since, TS.str(expected_since), query_string)))
 
             if not TS.compare(expected_until, until):
-                raise NMOSTestException(test.FAIL("Query API response header X-Paging-Until '{}' is outside the "
+                raise NMOSTestException(test.FAIL("Query API response header x-paging-until '{}' is outside the "
                                                   "expected range {}, for query: {}. This could just indicate the "
                                                   "API and Testing Tool clocks are not synchronized."
                                                   .format(until, TS.str(expected_until), query_string)))
 
             if not (expected_limit is None or str(expected_limit) == limit):
-                raise NMOSTestException(test.FAIL("Query API response did not include the correct X-Paging-Limit "
+                raise NMOSTestException(test.FAIL("Query API response did not include the correct x-paging-limit "
                                                   "header, for query: {}".format(query_string)))
 
-            link_header = self.parse_link_header(response.headers["Link"])
+            link_header = self.parse_link_header(response.headers["link"])
 
-            prev = link_header["prev"]
-            next = link_header["next"]
+            # Change: HTTP link headers may contain encoded Urls like this: "/nodes?paging.since=0%3A0"
+            prev = unquote(link_header["prev"],
+                           encoding='utf-8', errors='replace')
+            next = unquote(link_header["next"],
+                           encoding='utf-8', errors='replace')
 
             if "paging.until=" + since not in prev or "paging.since=" in prev:
                 raise NMOSTestException(test.FAIL("Query API response did not include the correct 'prev' value "
-                                                  "in the Link header, for query: {}".format(query_string)))
+                                                  "in the link header, for query: {}, prev: {} (expected until = {} and not since)".format(query_string, prev, since)))
 
             if "paging.since=" + until not in next or "paging.until=" in next:
                 raise NMOSTestException(test.FAIL("Query API response did not include the correct 'next' value "
-                                                  "in the Link header, for query: {}".format(query_string)))
+                                                  "in the link header, for query: {}, next: {} (expected since = {} and not until)".format(query_string, next, until)))
 
             # 'first' and 'last' are optional, though there's no obvious reason for them to be
-            first = link_header["first"] if "first" in link_header else None
-            last = link_header["last"] if "last" in link_header else None
+            first = unquote(link_header["first"],
+                            encoding='utf-8', errors='replace') if "first" in link_header else None
+            last = unquote(link_header["last"],
+                           encoding='utf-8', errors='replace') if "last" in link_header else None
 
             if first is not None:
                 if "paging.since=0:0" not in first or "paging.until=" in first:
                     raise NMOSTestException(test.FAIL("Query API response did not include the correct 'first' value "
-                                                      "in the Link header, for query: {}".format(query_string)))
+                                                      "in the link header, for query: {}, first: {} (expected since = 0:0 and not until)".format(query_string, first)))
 
             if last is not None:
                 if "paging.until=" in last or "paging.since=" in last:
                     raise NMOSTestException(test.FAIL("Query API response did not include the correct 'last' value "
-                                                      "in the Link header, for query: {}".format(query_string)))
+                                                      "in the link header, for query: {}, last: {} (should not contain until or since)".format(query_string, last)))
 
             for rel in ["first", "prev", "next", "last"]:
                 if rel not in link_header:
                     continue
 
                 if not link_header[rel].startswith(self.protocol + "://"):
-                    raise NMOSTestException(test.FAIL("Query API Link header is invalid for the current protocol. "
+                    raise NMOSTestException(test.FAIL("Query API link header is invalid for the current protocol. "
                                                       "Expected '{}://'".format(self.protocol)))
 
                 if "paging.limit=" + limit not in link_header[rel]:
                     raise NMOSTestException(test.FAIL("Query API response did not include the correct '{}' value "
-                                                      "in the Link header, for query: {}".format(rel, query_string)))
+                                                      "in the link header, for query: {}".format(rel, query_string)))
 
                 for param in query_parameters:
                     if "paging." in param:
                         continue
                     if param not in link_header[rel]:
                         raise NMOSTestException(test.FAIL("Query API response did not include the correct '{}' value "
-                                                          "in the Link header, for query: {}"
+                                                          "in the link header, for query: {}"
                                                           .format(rel, query_string)))
 
         except KeyError as ex:
             raise NMOSTestException(test.FAIL("Query API response did not include the expected value "
-                                              "in the Link header: {}".format(ex)))
+                                              "in the link header: {}".format(ex)))
 
     def test_21_1(self, test):
         """Query API implements pagination (no query or paging parameters)"""
@@ -620,7 +645,8 @@ class IS0402Test(GenericTest):
 
         # Example 3: Request With Since Parameter
 
-        response = self.do_paged_request(description=description, since=ts[4], limit=10)
+        response = self.do_paged_request(
+            description=description, since=ts[4], limit=10)
         self.do_test_paged_response(test, response,
                                     expected_ids=ids[5:14 + 1],
                                     expected_since=TS.upper(ts[4]), expected_until=TS_recommended(14),
@@ -628,7 +654,8 @@ class IS0402Test(GenericTest):
 
         # Example 4: Request With Until Parameter
 
-        response = self.do_paged_request(description=description, until=ts[16], limit=10)
+        response = self.do_paged_request(
+            description=description, until=ts[16], limit=10)
         self.do_test_paged_response(test, response,
                                     expected_ids=ids[7:16 + 1],
                                     expected_since=TS_recommended(6), expected_until=TS.upper(ts[16]),
@@ -636,7 +663,8 @@ class IS0402Test(GenericTest):
 
         # Example 5: Request With Since & Until Parameters
 
-        response = self.do_paged_request(description=description, since=ts[4], until=ts[16], limit=10)
+        response = self.do_paged_request(
+            description=description, since=ts[4], until=ts[16], limit=10)
         self.do_test_paged_response(test, response,
                                     expected_ids=ids[5:14 + 1],
                                     expected_since=TS.upper(ts[4]), expected_until=TS_recommended(14),
@@ -698,21 +726,24 @@ class IS0402Test(GenericTest):
 
         # Check paging.since == paging.until
 
-        response = self.do_paged_request(description=description, since=ts, until=ts, limit=10)
+        response = self.do_paged_request(
+            description=description, since=ts, until=ts, limit=10)
         self.do_test_paged_response(test, response,
                                     expected_ids=[],
                                     expected_since=ts, expected_until=ts, expected_limit=10)
 
         # Check paging.limit == 0, paging.since specified
 
-        response = self.do_paged_request(description=description, since=ts, limit=0)
+        response = self.do_paged_request(
+            description=description, since=ts, limit=0)
         self.do_test_paged_response(test, response,
                                     expected_ids=[],
                                     expected_since=ts, expected_until=ts, expected_limit=0)
 
         # Check paging.limit == 0, paging.since not specified
 
-        response = self.do_paged_request(description=description, until=ts, limit=0)
+        response = self.do_paged_request(
+            description=description, until=ts, limit=0)
         self.do_test_paged_response(test, response,
                                     expected_ids=[],
                                     expected_since=ts, expected_until=ts, expected_limit=0)
@@ -731,7 +762,8 @@ class IS0402Test(GenericTest):
         def bar(index):
             return not foo(index)
 
-        ts, ids = self.post_sample_nodes(test, 20, description, lambda index: "foo" if foo(index) else "bar")
+        ts, ids = self.post_sample_nodes(
+            test, 20, description, lambda index: "foo" if foo(index) else "bar")
 
         # Specify paging.limit in the requests with 'default paging parameters' in the following tests
         # because we can't rely on the implementation's default being 10
@@ -742,7 +774,8 @@ class IS0402Test(GenericTest):
         #          response           (       ^  ^  ^        ^   ^   ^           ^   ^   ^           ^ ]
 
         self.do_test_paged_response(test, self.do_paged_request(label="foo", limit=10),
-                                    expected_ids=[ids[i] for i in range(len(ids)) if foo(i)][-10:],
+                                    expected_ids=[ids[i] for i in range(
+                                        len(ids)) if foo(i)][-10:],
                                     expected_since=TS.extended(ts[1], ts[1], ts[4]), expected_until=TS.ge(ts[19]),
                                     expected_limit=10)
 
@@ -752,7 +785,8 @@ class IS0402Test(GenericTest):
         #          response     ( ^  ^ ]
 
         self.do_test_paged_response(test, self.do_paged_request(label="foo", until=ts[1], limit=10),
-                                    expected_ids=[ids[i] for i in range(len(ids)) if foo(i)][0:-10],
+                                    expected_ids=[ids[i] for i in range(
+                                        len(ids)) if foo(i)][0:-10],
                                     expected_since=TS.epoch(), expected_until=TS.gt(ts[1]),
                                     expected_limit=10)
 
@@ -772,7 +806,8 @@ class IS0402Test(GenericTest):
         #          response     (       ^  ^           ^  ^              ^   ^               ^   ^     ]
 
         self.do_test_paged_response(test, self.do_paged_request(label="bar", limit=10),
-                                    expected_ids=[ids[i] for i in range(len(ids)) if bar(i)],
+                                    expected_ids=[ids[i]
+                                                  for i in range(len(ids)) if bar(i)],
                                     expected_since=TS.epoch(), expected_until=TS.ge(ts[19]),
                                     expected_limit=10)
 
@@ -837,9 +872,11 @@ class IS0402Test(GenericTest):
         after = TS.required(self.is04_query_utils.get_TAI_time(1))
 
         # Specifying since after until is a bad request
-        valid, response, query_parameters = self.do_paged_request(since=after, until=before)
+        valid, response, query_parameters = self.do_paged_request(
+            since=after, until=before)
 
-        query_string = "?" + "&".join(query_parameters) if len(query_parameters) != 0 else ""
+        query_string = "?" + \
+            "&".join(query_parameters) if len(query_parameters) != 0 else ""
 
         if not valid:
             raise NMOSTestException(test.FAIL("Query API did not respond as expected, "
@@ -852,9 +889,11 @@ class IS0402Test(GenericTest):
                                                   NMOS_WIKI_URL + "/IS-04#registries-pagination"))
 
         # 200 OK *without* any paging headers also indicates not implemented (paging parameters ignored)
-        PAGING_HEADERS = ["Link", "X-Paging-Limit", "X-Paging-Since", "X-Paging-Until"]
+        PAGING_HEADERS = ["link", "x-paging-limit",
+                          "x-paging-since", "x-paging-until"]
 
-        absent_paging_headers = [_ for _ in PAGING_HEADERS if _ not in response.headers]
+        absent_paging_headers = [
+            _ for _ in PAGING_HEADERS if _ not in response.headers]
         if response.status_code == 200 and len(absent_paging_headers) == len(PAGING_HEADERS):
             raise NMOSTestException(test.OPTIONAL("Query API response did not include any pagination headers. "
                                                   "Query APIs should support pagination for scalability.",
@@ -884,19 +923,22 @@ class IS0402Test(GenericTest):
                                     expected_ids=ids,
                                     expected_since=TS.epoch(), expected_until=TS.ge(ts[-1]), expected_limit=count)
 
-        resources = response[1].json()  # valid json guaranteed by do_test_paged_response
+        # valid json guaranteed by do_test_paged_response
+        resources = response[1].json()
         resources.reverse()
 
         # 'next' page should be empty
 
-        response = self.do_paged_request(description=description, limit=count, since=ts[-1])
+        response = self.do_paged_request(
+            description=description, limit=count, since=ts[-1])
         self.do_test_paged_response(test, response,
                                     expected_ids=[],
                                     expected_since=TS.upper(ts[-1]), expected_until=None, expected_limit=count)
 
         # 'current' page should be same as initial response
 
-        response = self.do_paged_request(description=description, limit=count, until=ts[-1])
+        response = self.do_paged_request(
+            description=description, limit=count, until=ts[-1])
         self.do_test_paged_response(test, response,
                                     expected_ids=ids,
                                     expected_since=None, expected_until=TS.ge(ts[-1]), expected_limit=count)
@@ -905,14 +947,16 @@ class IS0402Test(GenericTest):
 
         self.post_resource(test, "node", resources[1], codes=[200])
 
-        response = self.do_paged_request(description=description, limit=count, since=ts[-1])
+        response = self.do_paged_request(
+            description=description, limit=count, since=ts[-1])
         self.do_test_paged_response(test, response,
                                     expected_ids=[ids[1]],
                                     expected_since=TS.upper(ts[-1]), expected_until=None, expected_limit=count)
 
         # and what was the 'current' page should now contain only the unchanged resources
 
-        response = self.do_paged_request(description=description, limit=count, until=ts[-1])
+        response = self.do_paged_request(
+            description=description, limit=count, until=ts[-1])
         self.do_test_paged_response(test, response,
                                     expected_ids=[ids[0], ids[2]],
                                     expected_since=None, expected_until=TS.upper(ts[-1]), expected_limit=count)
@@ -922,14 +966,16 @@ class IS0402Test(GenericTest):
         self.post_resource(test, "node", resources[2], codes=[200])
         self.post_resource(test, "node", resources[0], codes=[200])
 
-        response = self.do_paged_request(description=description, limit=count, until=ts[-1])
+        response = self.do_paged_request(
+            description=description, limit=count, until=ts[-1])
         self.do_test_paged_response(test, response,
                                     expected_ids=[],
                                     expected_since=None, expected_until=TS.upper(ts[-1]), expected_limit=count)
 
         # and what was the 'next' page should now contain all the resources in the update order
 
-        response = self.do_paged_request(description=description, limit=count, since=ts[-1])
+        response = self.do_paged_request(
+            description=description, limit=count, since=ts[-1])
         self.do_test_paged_response(test, response,
                                     expected_ids=[ids[1], ids[2], ids[0]],
                                     expected_since=TS.upper(ts[-1]), expected_until=None, expected_limit=count)
@@ -937,7 +983,7 @@ class IS0402Test(GenericTest):
         return test.PASS()
 
     def test_21_8(self, test):
-        """Query API implements pagination (correct encoding of URLs in Link header)"""
+        """Query API implements pagination (correct encoding of URLs in link header)"""
 
         self.do_test_paged_trait(test)
 
@@ -950,25 +996,25 @@ class IS0402Test(GenericTest):
         return test.PASS()
 
     def test_21_9(self, test):
-        """Query API implements pagination (correct protocol and IP/hostname in Link header)"""
+        """Query API implements pagination (correct protocol and IP/hostname in link header)"""
 
         self.do_test_paged_trait(test)
 
         response = self.do_paged_request()
-        # most tests on the Link header are actually done in every call to do_test_paged_response
+        # most tests on the link header are actually done in every call to do_test_paged_response
         self.do_test_paged_response(test, response,
                                     expected_ids=None,
                                     expected_since=None, expected_until=None)
 
-        # also check 'https' URLs in the Link header have a hostname not an IP address
-        link_header = self.parse_link_header(response[1].headers["Link"])
+        # also check 'https' URLs in the link header have a hostname not an IP address
+        link_header = self.parse_link_header(response[1].headers["link"])
 
         for rel in ["first", "prev", "next", "last"]:
             if rel not in link_header:
                 continue
 
             if link_header[rel].startswith("https://") and is_ip_address(urlparse(link_header[rel]).hostname):
-                return test.WARNING("Query API Link header has an IP address not a hostname")
+                return test.WARNING("Query API link header has an IP address not a hostname")
 
         return test.PASS()
 
@@ -983,7 +1029,8 @@ class IS0402Test(GenericTest):
 
         # Find the API versions supported by the Reg API
         try:
-            valid, r = self.do_request("GET", self.reg_url.rstrip(reg_api["version"] + "/"))
+            valid, r = self.do_request(
+                "GET", self.reg_url.rstrip(reg_api["version"] + "/"))
             if not valid:
                 return test.FAIL("Registration API failed to respond to request")
             else:
@@ -999,7 +1046,8 @@ class IS0402Test(GenericTest):
 
         # Find the API versions supported by the Query API
         try:
-            valid, r = self.do_request("GET", self.query_url.rstrip(query_api["version"] + "/"))
+            valid, r = self.do_request(
+                "GET", self.query_url.rstrip(query_api["version"] + "/"))
             if not valid:
                 return test.FAIL("Query API failed to respond to request")
             else:
@@ -1035,12 +1083,15 @@ class IS0402Test(GenericTest):
             test_data["description"] = test_id
             node_ids[api_version] = test_data["id"]
 
-            reg_url = "{}/{}/".format(self.reg_url.rstrip(reg_api["version"] + "/"), api_version)
-            self.post_resource(test, "node", test_data, codes=[201], reg_url=reg_url)
+            reg_url = "{}/{}/".format(self.reg_url.rstrip(
+                reg_api["version"] + "/"), api_version)
+            self.post_resource(test, "node", test_data,
+                               codes=[201], reg_url=reg_url)
 
         # Make a request to the Query API for each Node POSTed to ensure it's visible (or not) at the version under test
         for api_version in query_versions:
-            valid, r = self.do_request("GET", self.query_url + "nodes/{}".format(node_ids[api_version]))
+            valid, r = self.do_request(
+                "GET", self.query_url + "nodes/{}".format(node_ids[api_version]))
             if not valid:
                 return test.FAIL("Query API failed to respond to request")
             else:
@@ -1059,7 +1110,9 @@ class IS0402Test(GenericTest):
         for api_version in query_versions:
             valid, r = self.do_request(
                 "GET",
-                self.query_url + "nodes/{}?query.downgrade={}".format(node_ids[api_version], api_version)
+                self.query_url +
+                "nodes/{}?query.downgrade={}".format(
+                    node_ids[api_version], api_version)
             )
             if not valid:
                 return test.FAIL("Query API failed to respond to request")
@@ -1110,7 +1163,8 @@ class IS0402Test(GenericTest):
 
         # Find the API versions supported by the Query API
         try:
-            valid, r = self.do_request("GET", self.query_url.rstrip(api["version"] + "/"))
+            valid, r = self.do_request(
+                "GET", self.query_url.rstrip(api["version"] + "/"))
             if not valid:
                 return test.FAIL("Query API failed to respond to request")
             else:
@@ -1137,14 +1191,18 @@ class IS0402Test(GenericTest):
         valid_sub_id = resp_json["id"]
 
         previous_version = query_versions[-2]
-        query_sub_url = self.query_url.replace(api["version"], previous_version)
-        sub_json = self.prepare_subscription("/nodes", api_ver=previous_version)
-        resp_json = self.post_subscription(test, sub_json, query_url=query_sub_url)
+        query_sub_url = self.query_url.replace(
+            api["version"], previous_version)
+        sub_json = self.prepare_subscription(
+            "/nodes", api_ver=previous_version)
+        resp_json = self.post_subscription(
+            test, sub_json, query_url=query_sub_url)
         invalid_sub_id = resp_json["id"]
 
         # Test a request to GET subscriptions
         subscription_ids = set()
-        valid, r = self.do_request("GET", self.query_url + "subscriptions?query.downgrade={}".format(previous_version))
+        valid, r = self.do_request(
+            "GET", self.query_url + "subscriptions?query.downgrade={}".format(previous_version))
         if not valid:
             return test.FAIL("Query API failed to respond to request")
         else:
@@ -1178,7 +1236,8 @@ class IS0402Test(GenericTest):
 
         # Find the API versions supported by the Reg API
         try:
-            valid, r = self.do_request("GET", self.reg_url.rstrip(reg_api["version"] + "/"))
+            valid, r = self.do_request(
+                "GET", self.reg_url.rstrip(reg_api["version"] + "/"))
             if not valid:
                 return test.FAIL("Registration API failed to respond to request")
             else:
@@ -1194,7 +1253,8 @@ class IS0402Test(GenericTest):
 
         # Find the API versions supported by the Query API
         try:
-            valid, r = self.do_request("GET", self.query_url.rstrip(query_api["version"] + "/"))
+            valid, r = self.do_request(
+                "GET", self.query_url.rstrip(query_api["version"] + "/"))
             if not valid:
                 return test.FAIL("Query API failed to respond to request")
             else:
@@ -1224,9 +1284,11 @@ class IS0402Test(GenericTest):
         websockets = dict()
         for api_version in query_versions:
             if api_version != query_api["version"]:
-                sub_json = self.prepare_subscription("/nodes", params={"query.downgrade": api_version})
+                sub_json = self.prepare_subscription(
+                    "/nodes", params={"query.downgrade": api_version})
             else:
-                sub_json = self.prepare_subscription("/nodes")  # No downgrade for version under test
+                # No downgrade for version under test
+                sub_json = self.prepare_subscription("/nodes")
             resp_json = self.post_subscription(test, sub_json)
             websockets[api_version] = WebsocketWorker(resp_json["ws_href"])
             websockets[api_version].start()
@@ -1249,8 +1311,10 @@ class IS0402Test(GenericTest):
             test_data["description"] = test_id
             node_ids[api_version] = test_data["id"]
 
-            reg_url = "{}/{}/".format(self.reg_url.rstrip(reg_api["version"] + "/"), api_version)
-            self.post_resource(test, "node", test_data, codes=[201], reg_url=reg_url)
+            reg_url = "{}/{}/".format(self.reg_url.rstrip(
+                reg_api["version"] + "/"), api_version)
+            self.post_resource(test, "node", test_data,
+                               codes=[201], reg_url=reg_url)
 
         sleep(CONFIG.WS_MESSAGE_TIMEOUT)
 
@@ -1315,7 +1379,8 @@ class IS0402Test(GenericTest):
                 return test.UNCLEAR("Fewer Nodes found in registry than expected. Test cannot proceed.")
 
             query_string = "?description=" + node_descriptions[0]
-            valid, r = self.do_request("GET", self.query_url + "nodes" + query_string)
+            valid, r = self.do_request(
+                "GET", self.query_url + "nodes" + query_string)
             api = self.apis[QUERY_API_KEY]
             if not valid:
                 return test.FAIL("Query API failed to respond to query")
@@ -1341,7 +1406,8 @@ class IS0402Test(GenericTest):
 
         # Perform a basic test for APIs <= v1.2 checking for support
         try:
-            valid, r = self.do_request("GET", self.query_url + "nodes?description={}".format(str(uuid.uuid4())))
+            valid, r = self.do_request(
+                "GET", self.query_url + "nodes?description={}".format(str(uuid.uuid4())))
             if not valid:
                 return test.FAIL("Query API failed to respond to query")
             elif r.status_code == 200 and len(r.json()) > 0 or r.status_code != 200:
@@ -1353,7 +1419,8 @@ class IS0402Test(GenericTest):
 
         # Create subscription to a specific Node description
         node_ids = [str(uuid.uuid4()), str(uuid.uuid4())]
-        sub_json = self.prepare_subscription("/nodes", params={"description": node_ids[0]})
+        sub_json = self.prepare_subscription(
+            "/nodes", params={"description": node_ids[0]})
         resp_json = self.post_subscription(test, sub_json)
 
         websocket = WebsocketWorker(resp_json["ws_href"])
@@ -1478,8 +1545,10 @@ class IS0402Test(GenericTest):
             elif len(r.json()) < 2:
                 return test.UNCLEAR("Fewer Nodes found in registry than expected. Test cannot proceed.")
 
-            query_string = "?query.rql=eq(description," + str(node_descriptions[0]) + ")"
-            valid, r = self.do_request("GET", self.query_url + "nodes" + query_string)
+            query_string = "?query.rql=eq(description," + \
+                str(node_descriptions[0]) + ")"
+            valid, r = self.do_request(
+                "GET", self.query_url + "nodes" + query_string)
             if not valid:
                 return test.FAIL("Query API failed to respond to query")
             elif r.status_code == 501:
@@ -1522,7 +1591,8 @@ class IS0402Test(GenericTest):
         # Create subscription to a specific Node description
         node_ids = [str(uuid.uuid4()), str(uuid.uuid4())]
         query_string = "eq(description," + str(node_ids[0]) + ")"
-        sub_json = self.prepare_subscription("/nodes", params={"query.rql": query_string})
+        sub_json = self.prepare_subscription(
+            "/nodes", params={"query.rql": query_string})
         resp_json = self.post_subscription(test, sub_json)
 
         websocket = WebsocketWorker(resp_json["ws_href"])
@@ -1637,8 +1707,10 @@ class IS0402Test(GenericTest):
                 return test.UNCLEAR("No Sources found in registry. Test cannot proceed.")
 
             random_label = uuid.uuid4()
-            query_string = "?query.ancestry_id=" + str(random_label) + "&query.ancestry_type=children"
-            valid, r = self.do_request("GET", self.query_url + "sources" + query_string)
+            query_string = "?query.ancestry_id=" + \
+                str(random_label) + "&query.ancestry_type=children"
+            valid, r = self.do_request(
+                "GET", self.query_url + "sources" + query_string)
             if not valid:
                 return test.FAIL("Query API failed to respond to query")
             elif r.status_code == 501:
@@ -1705,7 +1777,8 @@ class IS0402Test(GenericTest):
         for resource in resources:
             curr_id = self.test_data[resource]["id"]
 
-            valid, r = self.do_request("GET", self.query_url + "{}s/{}".format(resource, curr_id))
+            valid, r = self.do_request(
+                "GET", self.query_url + "{}s/{}".format(resource, curr_id))
             if not valid or r.status_code != 200:
                 return test.FAIL("Cannot execute test, as expected resources are not registered")
 
@@ -1717,7 +1790,8 @@ class IS0402Test(GenericTest):
         for resource in resources:
             curr_id = self.test_data[resource]["id"]
 
-            valid, r = self.do_request("GET", self.query_url + "{}s/{}".format(resource, curr_id))
+            valid, r = self.do_request(
+                "GET", self.query_url + "{}s/{}".format(resource, curr_id))
             if valid:
                 if r.status_code != 404:
                     return test.FAIL("Query API did not return 404 on a resource which should have been "
@@ -1781,7 +1855,8 @@ class IS0402Test(GenericTest):
 
         # Test if subscription is available
         sub_id = resp_json["id"]
-        valid, r = self.do_request("GET", "{}subscriptions/{}".format(self.query_url, sub_id))
+        valid, r = self.do_request(
+            "GET", "{}subscriptions/{}".format(self.query_url, sub_id))
         if not valid:
             return test.FAIL("Query API did not respond as expected")
         elif r.status_code == 200:
@@ -1819,11 +1894,13 @@ class IS0402Test(GenericTest):
         self.post_resource(test, "node")
 
         # Post heartbeat
-        valid, r = self.do_request("POST", "{}health/nodes/{}".format(self.reg_url, self.test_data["node"]["id"]))
+        valid, r = self.do_request(
+            "POST", "{}health/nodes/{}".format(self.reg_url, self.test_data["node"]["id"]))
         if not valid:
             return test.FAIL("Registration API did not respond as expected")
         elif r.status_code == 200:
-            schema = self.get_schema(REG_API_KEY, "POST", "/health/nodes/{nodeId}", r.status_code)
+            schema = self.get_schema(
+                REG_API_KEY, "POST", "/health/nodes/{nodeId}", r.status_code)
             valid, message = self.check_response(schema, "POST", r)
             if valid:
                 if message:
@@ -1843,7 +1920,8 @@ class IS0402Test(GenericTest):
         api = self.apis[QUERY_API_KEY]
 
         # Check for clean state // delete resources if needed
-        resource_types = ["node", "device", "source", "flow", "sender", "receiver"]
+        resource_types = ["node", "device",
+                          "source", "flow", "sender", "receiver"]
         for curr_resource in resource_types:
             valid, r = self.do_request(
                 "GET",
@@ -1880,7 +1958,8 @@ class IS0402Test(GenericTest):
 
         websockets = dict()
         try:
-            resources_to_post = ["node", "device", "source", "flow", "sender", "receiver"]
+            resources_to_post = ["node", "device",
+                                 "source", "flow", "sender", "receiver"]
 
             for resource in resources_to_post:
                 sub_json = self.prepare_subscription("/{}s".format(resource))
@@ -1889,7 +1968,8 @@ class IS0402Test(GenericTest):
 
             # Post sample data
             for resource in resources_to_post:
-                self.post_resource(test, resource, test_data[resource], codes=[201])
+                self.post_resource(
+                    test, resource, test_data[resource], codes=[201])
 
             # Verify if corresponding message received via websocket: UNCHANGED (SYNC)
 
@@ -1906,7 +1986,8 @@ class IS0402Test(GenericTest):
             sleep(CONFIG.WS_MESSAGE_TIMEOUT)
 
             # Heartbeat node after sleep to prevent expiry
-            valid, r = self.do_request("POST", "{}health/nodes/{}".format(self.reg_url, self.test_data["node"]["id"]))
+            valid, r = self.do_request(
+                "POST", "{}health/nodes/{}".format(self.reg_url, self.test_data["node"]["id"]))
             if not valid:
                 return test.FAIL("Registration API failed to respond to heartbeat request: {}".format(r))
 
@@ -1937,7 +2018,8 @@ class IS0402Test(GenericTest):
                         continue
                     pre_data = json.dumps(curr_data["pre"], sort_keys=True)
                     post_data = json.dumps(curr_data["post"], sort_keys=True)
-                    sorted_resource_data = json.dumps(resource_data, sort_keys=True)
+                    sorted_resource_data = json.dumps(
+                        resource_data, sort_keys=True)
 
                     if pre_data == sorted_resource_data:
                         if post_data == sorted_resource_data:
@@ -1948,7 +2030,8 @@ class IS0402Test(GenericTest):
                                      "for '{}'".format(resource))
 
             # Verify if corresponding message received via websocket: MODIFIED
-            old_resource_data = deepcopy(test_data)  # Backup old resource data for later comparison
+            # Backup old resource data for later comparison
+            old_resource_data = deepcopy(test_data)
             for resource, resource_data in test_data.items():
                 # Update resource
                 self.post_resource(test, resource, resource_data, codes=[200])
@@ -1956,7 +2039,8 @@ class IS0402Test(GenericTest):
             sleep(CONFIG.WS_MESSAGE_TIMEOUT)
 
             # Heartbeat node after sleep to prevent expiry
-            valid, r = self.do_request("POST", "{}health/nodes/{}".format(self.reg_url, self.test_data["node"]["id"]))
+            valid, r = self.do_request(
+                "POST", "{}health/nodes/{}".format(self.reg_url, self.test_data["node"]["id"]))
             if not valid:
                 return test.FAIL("Registration API failed to respond to heartbeat request: {}".format(r))
 
@@ -1983,8 +2067,10 @@ class IS0402Test(GenericTest):
                         continue
                     pre_data = json.dumps(curr_data["pre"], sort_keys=True)
                     post_data = json.dumps(curr_data["post"], sort_keys=True)
-                    sorted_resource_data = json.dumps(resource_data, sort_keys=True)
-                    sorted_old_resource_data = json.dumps(old_resource_data[resource], sort_keys=True)
+                    sorted_resource_data = json.dumps(
+                        resource_data, sort_keys=True)
+                    sorted_old_resource_data = json.dumps(
+                        old_resource_data[resource], sort_keys=True)
 
                     if pre_data == sorted_old_resource_data:
                         if post_data == sorted_resource_data:
@@ -2000,7 +2086,9 @@ class IS0402Test(GenericTest):
             for resource in reversed_resource_list:
                 valid, r = self.do_request(
                     "DELETE",
-                    self.reg_url + "resource/{}s/{}".format(resource, test_data[resource]["id"])
+                    self.reg_url +
+                    "resource/{}s/{}".format(resource,
+                                             test_data[resource]["id"])
                 )
                 if not valid:
                     return test.FAIL("Registration API did not respond as expected: Cannot delete {}: {}"
@@ -2032,7 +2120,8 @@ class IS0402Test(GenericTest):
                     if "pre" not in curr_data:
                         continue
                     pre_data = json.dumps(curr_data["pre"], sort_keys=True)
-                    sorted_resource_data = json.dumps(resource_data, sort_keys=True)
+                    sorted_resource_data = json.dumps(
+                        resource_data, sort_keys=True)
 
                     if pre_data == sorted_resource_data:
                         if "post" not in curr_data:
@@ -2047,7 +2136,8 @@ class IS0402Test(GenericTest):
             for resource in resources_to_post:
                 # Recreate resource with updated version
                 self.bump_resource_version(test_data[resource])
-                self.post_resource(test, resource, test_data[resource], codes=[201])
+                self.post_resource(
+                    test, resource, test_data[resource], codes=[201])
 
             sleep(CONFIG.WS_MESSAGE_TIMEOUT)
             for resource, resource_data in test_data.items():
@@ -2071,7 +2161,8 @@ class IS0402Test(GenericTest):
                     if "post" not in curr_data:
                         continue
                     post_data = json.dumps(curr_data["post"], sort_keys=True)
-                    sorted_resource_data = json.dumps(resource_data, sort_keys=True)
+                    sorted_resource_data = json.dumps(
+                        resource_data, sort_keys=True)
 
                     if post_data == sorted_resource_data:
                         if "pre" not in curr_data:
@@ -2099,7 +2190,8 @@ class IS0402Test(GenericTest):
 
         # Find the API versions supported by the Reg API
         try:
-            valid, r = self.do_request("GET", self.reg_url.rstrip(api["version"] + "/"))
+            valid, r = self.do_request(
+                "GET", self.reg_url.rstrip(api["version"] + "/"))
             if not valid:
                 return test.FAIL("Registration API failed to respond to request")
             else:
@@ -2117,7 +2209,8 @@ class IS0402Test(GenericTest):
         node_id = str(uuid.uuid4())
 
         # Post Node at a version other than the one under test
-        alt_reg_url = "{}/{}/".format(self.reg_url.rstrip(api["version"] + "/"), reg_versions[0])
+        alt_reg_url = "{}/{}/".format(self.reg_url.rstrip(
+            api["version"] + "/"), reg_versions[0])
         alt_node = self.copy_resource("node", reg_versions[0])
         alt_node["id"] = node_id
         self.post_resource(test, "node", alt_node, reg_url=alt_reg_url)
@@ -2144,9 +2237,11 @@ class IS0402Test(GenericTest):
         data = self.copy_resource("node")
         data["id"] = str(uuid.uuid4())
         data["description"] = "test_33"
-        self.post_resource(test, "node", data, headers={"Authorization": "Bearer {}".format(a_token)})
+        self.post_resource(test, "node", data, headers={
+                           "Authorization": "Bearer {}".format(a_token)})
         self.bump_resource_version(data)
-        self.post_resource(test, "node", data, codes=[403], headers={"Authorization": "Bearer {}".format(b_token)})
+        self.post_resource(test, "node", data, codes=[403], headers={
+                           "Authorization": "Bearer {}".format(b_token)})
 
         return test.PASS()
 
@@ -2166,9 +2261,11 @@ class IS0402Test(GenericTest):
         data = self.copy_resource("node")
         data["id"] = str(uuid.uuid4())
         data["description"] = "test_33_1"
-        self.post_resource(test, "node", data, headers={"Authorization": "Bearer {}".format(a_token)})
+        self.post_resource(test, "node", data, headers={
+                           "Authorization": "Bearer {}".format(a_token)})
         self.bump_resource_version(data)
-        self.post_resource(test, "node", data, codes=[403], headers={"Authorization": "Bearer {}".format(b_token)})
+        self.post_resource(test, "node", data, codes=[403], headers={
+                           "Authorization": "Bearer {}".format(b_token)})
 
         return test.PASS()
 
@@ -2202,7 +2299,8 @@ class IS0402Test(GenericTest):
         data["id"] = str(uuid.uuid4())
         # to cause schema validation failure, remove the label property (required for all resources since v1.0)
         del data["label"]
-        valid, r = self.do_request("POST", self.reg_url + "resource", json={"type": resource_type, "data": data})
+        valid, r = self.do_request(
+            "POST", self.reg_url + "resource", json={"type": resource_type, "data": data})
 
         if not valid:
             return test.FAIL(r)
@@ -2210,7 +2308,8 @@ class IS0402Test(GenericTest):
         if r.status_code != 400:
             return test.FAIL("Registration API returned a {} code for an invalid registration".format(r.status_code))
 
-        schema = self.get_schema(REG_API_KEY, "POST", "/resource", r.status_code)
+        schema = self.get_schema(
+            REG_API_KEY, "POST", "/resource", r.status_code)
         valid, message = self.check_response(schema, "POST", r)
         if valid:
             if message:
@@ -2242,7 +2341,8 @@ class IS0402Test(GenericTest):
         sub_json["params"] = params
         sub_json["secure"] = CONFIG.ENABLE_HTTPS
         if self.is04_query_utils.compare_api_version(api_ver, "v1.3") < 0:
-            sub_json = IS04Utils.downgrade_resource("subscription", sub_json, api_ver)
+            sub_json = IS04Utils.downgrade_resource(
+                "subscription", sub_json, api_ver)
         return sub_json
 
     def post_subscription(self, test, sub_json, query_url=None):
@@ -2252,15 +2352,18 @@ class IS0402Test(GenericTest):
 
         api_ver = query_url.rstrip("/").rsplit("/", 1)[-1]
 
-        valid, r = self.do_request("POST", "{}subscriptions".format(query_url), json=sub_json)
+        valid, r = self.do_request(
+            "POST", "{}subscriptions".format(query_url), json=sub_json)
 
         if not valid:
-            raise NMOSTestException(test.FAIL("Query API returned an unexpected response: {}".format(r)))
+            raise NMOSTestException(
+                test.FAIL("Query API returned an unexpected response: {}".format(r)))
 
         if r.status_code in [200, 201]:
             if self.is04_query_utils.compare_api_version(api_ver, "v1.3") >= 0:
                 if "Location" not in r.headers:
-                    raise NMOSTestException(test.FAIL("Query API failed to return a 'Location' response header"))
+                    raise NMOSTestException(
+                        test.FAIL("Query API failed to return a 'Location' response header"))
                 path = "{}subscriptions/".format(urlparse(query_url).path)
                 location = r.headers["Location"]
                 if path not in location:
@@ -2278,7 +2381,8 @@ class IS0402Test(GenericTest):
 
         # Currently can only validate schema for the API version under test
         if query_url == self.query_url:
-            schema = self.get_schema(QUERY_API_KEY, "POST", "/subscriptions", r.status_code)
+            schema = self.get_schema(
+                QUERY_API_KEY, "POST", "/subscriptions", r.status_code)
             valid, message = self.check_response(schema, "POST", r)
             if valid:
                 # if message:
@@ -2290,7 +2394,8 @@ class IS0402Test(GenericTest):
         try:
             return r.json()
         except json.JSONDecodeError:
-            raise NMOSTestException(test.FAIL("Non-JSON response returned for Query API subscription request"))
+            raise NMOSTestException(
+                test.FAIL("Non-JSON response returned for Query API subscription request"))
 
     def post_resource(self, test, type, data=None, reg_url=None, codes=None, fail=Test.FAIL, headers=None):
         """
@@ -2312,9 +2417,11 @@ class IS0402Test(GenericTest):
         if 200 in codes:
             self.bump_resource_version(data)
 
-        valid, r = self.do_request("POST", reg_url + "resource", json={"type": type, "data": data}, headers=headers)
+        valid, r = self.do_request(
+            "POST", reg_url + "resource", json={"type": type, "data": data}, headers=headers)
         if not valid:
-            raise NMOSTestException(fail(test, "Registration API returned an unexpected response: {}".format(r)))
+            raise NMOSTestException(
+                fail(test, "Registration API returned an unexpected response: {}".format(r)))
 
         location = None
         timestamp = None
@@ -2322,7 +2429,8 @@ class IS0402Test(GenericTest):
         wrong_codes = [_ for _ in [200, 201] if _ not in codes]
 
         if r.status_code in wrong_codes:
-            raise NMOSTestException(fail(test, "Registration API returned wrong HTTP code: {}".format(r.status_code)))
+            raise NMOSTestException(fail(
+                test, "Registration API returned wrong HTTP code: {}".format(r.status_code)))
         elif r.status_code not in codes:
             raise NMOSTestException(fail(test, "Registration API returned an unexpected response: "
                                                "{} {}".format(r.status_code, r.text)))
@@ -2331,8 +2439,10 @@ class IS0402Test(GenericTest):
             if "X-Paging-Timestamp" in r.headers:
                 timestamp = r.headers["X-Paging-Timestamp"]
             if "Location" not in r.headers:
-                raise NMOSTestException(fail(test, "Registration API failed to return a 'Location' response header"))
-            path = "{}resource/{}s/{}".format(urlparse(reg_url).path, type, data["id"])
+                raise NMOSTestException(
+                    fail(test, "Registration API failed to return a 'Location' response header"))
+            path = "{}resource/{}s/{}".format(
+                urlparse(reg_url).path, type, data["id"])
             location = r.headers["Location"]
             if path not in location:
                 raise NMOSTestException(fail(test, "Registration API 'Location' response header is incorrect: "
@@ -2343,7 +2453,8 @@ class IS0402Test(GenericTest):
 
         # Currently can only validate schema for the API version under test
         if reg_url == self.reg_url:
-            schema = self.get_schema(REG_API_KEY, "POST", "/resource", r.status_code)
+            schema = self.get_schema(
+                REG_API_KEY, "POST", "/resource", r.status_code)
             valid, message = self.check_response(schema, "POST", r)
             if valid:
                 # if message:
@@ -2368,25 +2479,34 @@ class IS0402Test(GenericTest):
         if type == "node":
             pass
         elif type == "device":
-            node = self.post_super_resources_and_resource(test, "node", description, fail=Test.UNCLEAR)
+            node = self.post_super_resources_and_resource(
+                test, "node", description, fail=Test.UNCLEAR)
             data["node_id"] = node["id"]
-            data["senders"] = []  # or add an id here, and use it when posting the sender?
-            data["receivers"] = []  # or add an id here, and use it when posting the receiver?
+            # or add an id here, and use it when posting the sender?
+            data["senders"] = []
+            # or add an id here, and use it when posting the receiver?
+            data["receivers"] = []
         elif type == "source":
-            device = self.post_super_resources_and_resource(test, "device", description, fail=Test.UNCLEAR)
+            device = self.post_super_resources_and_resource(
+                test, "device", description, fail=Test.UNCLEAR)
             data["device_id"] = device["id"]
         elif type == "flow":
-            source = self.post_super_resources_and_resource(test, "source", description, fail=Test.UNCLEAR)
+            source = self.post_super_resources_and_resource(
+                test, "source", description, fail=Test.UNCLEAR)
             data["device_id"] = source["device_id"]
             data["source_id"] = source["id"]
             # since device_id is v1.1, downgrade
-            data = IS04Utils.downgrade_resource(type, data, self.apis[REG_API_KEY]["version"])
+            data = IS04Utils.downgrade_resource(
+                type, data, self.apis[REG_API_KEY]["version"])
         elif type == "sender":
-            device = self.post_super_resources_and_resource(test, "device", description, fail=Test.UNCLEAR)
+            device = self.post_super_resources_and_resource(
+                test, "device", description, fail=Test.UNCLEAR)
             data["device_id"] = device["id"]
-            data["flow_id"] = str(uuid.uuid4())  # or post a flow first and use its id here?
+            # or post a flow first and use its id here?
+            data["flow_id"] = str(uuid.uuid4())
         elif type == "receiver":
-            device = self.post_super_resources_and_resource(test, "device", description, fail=Test.UNCLEAR)
+            device = self.post_super_resources_and_resource(
+                test, "device", description, fail=Test.UNCLEAR)
             data["device_id"] = device["id"]
 
         self.post_resource(test, type, data, codes=[201], fail=fail)
@@ -2400,7 +2520,8 @@ class IS0402Test(GenericTest):
         """
         api = self.apis[REG_API_KEY]
         if not self.is04_reg_utils.compare_api_version(api["version"], "v2.0") < 0:
-            raise NMOSTestException(test.FAIL("Version > 1 not supported yet."))
+            raise NMOSTestException(
+                test.FAIL("Version > 1 not supported yet."))
 
 
 class TS:
@@ -2472,7 +2593,8 @@ class TS:
     def extended(lower, recommended, upper):
         return (
             TS.lower_TAI(lower) if lower is not None else None,
-            TS.recommended_TAI(recommended) if recommended is not None else None,
+            TS.recommended_TAI(
+                recommended) if recommended is not None else None,
             TS.upper_TAI(upper) if upper is not None else None
         )
 
