@@ -436,7 +436,7 @@ class IS0402Test(GenericTest):
 
         # check *presence* of paging headers before checking response body
 
-        PAGING_HEADERS = ["Link", "X-Paging-Limit", "X-Paging-Since", "X-Paging-Until"]
+        PAGING_HEADERS = ["link", "x-paging-limit", "x-paging-since", "x-paging-until"]
 
         absent_paging_headers = [_ for _ in PAGING_HEADERS if _ not in response.headers]
         if (len(absent_paging_headers) == len(PAGING_HEADERS)):
@@ -474,27 +474,27 @@ class IS0402Test(GenericTest):
         # check *values* of paging headers after body
 
         try:
-            since = response.headers["X-Paging-Since"]
-            until = response.headers["X-Paging-Until"]
-            limit = response.headers["X-Paging-Limit"]
+            since = response.headers["x-paging-since"]
+            until = response.headers["x-paging-until"]
+            limit = response.headers["x-paging-limit"]
 
             if not TS.compare(expected_since, since):
-                raise NMOSTestException(test.FAIL("Query API response header X-Paging-Since '{}' is outside the "
+                raise NMOSTestException(test.FAIL("Query API response header x-paging-since '{}' is outside the "
                                                   "expected range {}, for query: {}. This could just indicate the "
                                                   "API and Testing Tool clocks are not synchronized."
                                                   .format(since, TS.str(expected_since), query_string)))
 
             if not TS.compare(expected_until, until):
-                raise NMOSTestException(test.FAIL("Query API response header X-Paging-Until '{}' is outside the "
+                raise NMOSTestException(test.FAIL("Query API response header x-paging-until '{}' is outside the "
                                                   "expected range {}, for query: {}. This could just indicate the "
                                                   "API and Testing Tool clocks are not synchronized."
                                                   .format(until, TS.str(expected_until), query_string)))
 
             if not (expected_limit is None or str(expected_limit) == limit):
-                raise NMOSTestException(test.FAIL("Query API response did not include the correct X-Paging-Limit "
+                raise NMOSTestException(test.FAIL("Query API response did not include the correct x-paging-limit "
                                                   "header, for query: {}".format(query_string)))
 
-            link_header = self.parse_link_header(response.headers["Link"])
+            link_header = self.parse_link_header(response.headers["link"])
 
             # Change: HTTP link headers may contain encoded Urls like this: "/nodes?paging.since=0%3A0"
             prev = unquote(link_header["prev"],
@@ -504,11 +504,11 @@ class IS0402Test(GenericTest):
 
             if "paging.until=" + since not in prev or "paging.since=" in prev:
                 raise NMOSTestException(test.FAIL("Query API response did not include the correct 'prev' value "
-                                                  "in the Link header, for query: {}".format(query_string)))
+                                                  "in the link header, for query: {}".format(query_string)))
 
             if "paging.since=" + until not in next or "paging.until=" in next:
                 raise NMOSTestException(test.FAIL("Query API response did not include the correct 'next' value "
-                                                  "in the Link header, for query: {}".format(query_string)))
+                                                  "in the link header, for query: {}".format(query_string)))
 
             # 'first' and 'last' are optional, though there's no obvious reason for them to be
             first = link_header["first"] if "first" in link_header else None
@@ -517,36 +517,36 @@ class IS0402Test(GenericTest):
             if first is not None:
                 if "paging.since=0:0" not in first or "paging.until=" in first:
                     raise NMOSTestException(test.FAIL("Query API response did not include the correct 'first' value "
-                                                      "in the Link header, for query: {}".format(query_string)))
+                                                      "in the link header, for query: {}".format(query_string)))
 
             if last is not None:
                 if "paging.until=" in last or "paging.since=" in last:
                     raise NMOSTestException(test.FAIL("Query API response did not include the correct 'last' value "
-                                                      "in the Link header, for query: {}".format(query_string)))
+                                                      "in the link header, for query: {}".format(query_string)))
 
             for rel in ["first", "prev", "next", "last"]:
                 if rel not in link_header:
                     continue
 
                 if not link_header[rel].startswith(self.protocol + "://"):
-                    raise NMOSTestException(test.FAIL("Query API Link header is invalid for the current protocol. "
+                    raise NMOSTestException(test.FAIL("Query API link header is invalid for the current protocol. "
                                                       "Expected '{}://'".format(self.protocol)))
 
                 if "paging.limit=" + limit not in link_header[rel]:
                     raise NMOSTestException(test.FAIL("Query API response did not include the correct '{}' value "
-                                                      "in the Link header, for query: {}".format(rel, query_string)))
+                                                      "in the link header, for query: {}".format(rel, query_string)))
 
                 for param in query_parameters:
                     if "paging." in param:
                         continue
                     if param not in link_header[rel]:
                         raise NMOSTestException(test.FAIL("Query API response did not include the correct '{}' value "
-                                                          "in the Link header, for query: {}"
+                                                          "in the link header, for query: {}"
                                                           .format(rel, query_string)))
 
         except KeyError as ex:
             raise NMOSTestException(test.FAIL("Query API response did not include the expected value "
-                                              "in the Link header: {}".format(ex)))
+                                              "in the link header: {}".format(ex)))
 
     def test_21_1(self, test):
         """Query API implements pagination (no query or paging parameters)"""
@@ -855,7 +855,7 @@ class IS0402Test(GenericTest):
                                                   NMOS_WIKI_URL + "/IS-04#registries-pagination"))
 
         # 200 OK *without* any paging headers also indicates not implemented (paging parameters ignored)
-        PAGING_HEADERS = ["Link", "X-Paging-Limit", "X-Paging-Since", "X-Paging-Until"]
+        PAGING_HEADERS = ["link", "x-paging-limit", "x-paging-since", "x-paging-until"]
 
         absent_paging_headers = [_ for _ in PAGING_HEADERS if _ not in response.headers]
         if response.status_code == 200 and len(absent_paging_headers) == len(PAGING_HEADERS):
@@ -940,7 +940,7 @@ class IS0402Test(GenericTest):
         return test.PASS()
 
     def test_21_8(self, test):
-        """Query API implements pagination (correct encoding of URLs in Link header)"""
+        """Query API implements pagination (correct encoding of URLs in link header)"""
 
         self.do_test_paged_trait(test)
 
@@ -953,25 +953,25 @@ class IS0402Test(GenericTest):
         return test.PASS()
 
     def test_21_9(self, test):
-        """Query API implements pagination (correct protocol and IP/hostname in Link header)"""
+        """Query API implements pagination (correct protocol and IP/hostname in link header)"""
 
         self.do_test_paged_trait(test)
 
         response = self.do_paged_request()
-        # most tests on the Link header are actually done in every call to do_test_paged_response
+        # most tests on the link header are actually done in every call to do_test_paged_response
         self.do_test_paged_response(test, response,
                                     expected_ids=None,
                                     expected_since=None, expected_until=None)
 
-        # also check 'https' URLs in the Link header have a hostname not an IP address
-        link_header = self.parse_link_header(response[1].headers["Link"])
+        # also check 'https' URLs in the link header have a hostname not an IP address
+        link_header = self.parse_link_header(response[1].headers["link"])
 
         for rel in ["first", "prev", "next", "last"]:
             if rel not in link_header:
                 continue
 
             if link_header[rel].startswith("https://") and is_ip_address(urlparse(link_header[rel]).hostname):
-                return test.WARNING("Query API Link header has an IP address not a hostname")
+                return test.WARNING("Query API link header has an IP address not a hostname")
 
         return test.PASS()
 
