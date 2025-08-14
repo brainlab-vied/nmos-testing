@@ -124,9 +124,9 @@ class ControllerTest(GenericTest):
         self.primary_registry.enable()
 
         host = get_mocks_hostname() if CONFIG.ENABLE_HTTPS else get_default_ip()
-        self.mock_registry_base_url = self.protocol + '://' + host + ':'\
+        self.mock_registry_base_url = self.mock_registry_protocol + '://' + host + ':'\
             + str(self.primary_registry.get_data().port) + '/'
-        self.mock_node_base_url = self.protocol + '://' + host + ':' + str(self.node.port) + '/'
+        self.mock_node_base_url = self.mock_registry_protocol + '://' + host + ':' + str(self.node.port) + '/'
 
         # Populate mock registry with senders and receivers and store the results
         try:

@@ -124,7 +124,7 @@ for instance in range(NUM_REGISTRIES):
     reg_app.debug = False
     reg_app.config['REGISTRY_INSTANCE'] = instance
     reg_app.config['PORT'] = REGISTRIES[instance].port
-    reg_app.config['SECURE'] = CONFIG.ENABLE_HTTPS
+    reg_app.config['SECURE'] = CONFIG.ENABLE_REGISTRY_MOCK_HTTPS
     reg_app.register_blueprint(REGISTRY_API)  # Dependency for IS0401Test
     FLASK_APPS.append(reg_app)
 
@@ -980,7 +980,7 @@ def check_internal_requirements():
     if platform.system() == "Windows":
         print("Skipping internal requirements skip on windows")
         return
-    
+
     corrections = {"gitpython": "git",
                    "pyopenssl": "OpenSSL",
                    "websocket-client": "websocket",

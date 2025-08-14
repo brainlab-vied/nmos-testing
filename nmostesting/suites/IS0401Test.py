@@ -128,6 +128,9 @@ class IS0401Test(GenericTest):
         service_type = "_nmos-registration._tcp.local."
         if self.is04_utils.compare_api_version(self.apis[NODE_API_KEY]["version"], "v1.3") >= 0:
             service_type = "_nmos-register._tcp.local."
+            
+        if api_proto is None:
+            api_proto = self.mock_registry_protocol
 
         txt = {'pri': str(priority)}
 
