@@ -70,10 +70,13 @@ class GenericTest(object):
         self.test_individual = False
         self.result = list()
         self.protocol = "http"
+        self.mock_registry_protocol = "http"
         self.ws_protocol = "ws"
         if CONFIG.ENABLE_HTTPS:
             self.protocol = "https"
             self.ws_protocol = "wss"
+        if CONFIG.ENABLE_REGISTRY_MOCK_HTTPS:
+            self.mock_registry_protocol = "https"
         self.authorization = False
         if CONFIG.ENABLE_AUTH:
             self.authorization = True
