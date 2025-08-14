@@ -81,7 +81,7 @@ MAX_TEST_ITERATIONS = 0
 # Test using HTTPS rather than HTTP as per AMWA BCP-003-01
 ENABLE_HTTPS = False
 
-# Test mocked registries using HTTPS rather than HTTPS (beneficial to se tto false in order to avoid mTLS cert headaches)
+# Test mocked registries using HTTPS rather than HTTPS (beneficial to set to false in order to avoid mTLS cert headaches)
 ENABLE_REGISTRY_MOCK_HTTPS = False
 
 # Prefer a specific network interface when making mDNS announcements and similar.
